@@ -41,6 +41,30 @@ La consigna pide:
 2. Notebook o script que entrene y guarde el modelo final.
 3. Notebook o script que aplique el modelo final a los datos de test y replique el archivo enviado.
 
+## Notebooks finales
+
+```text
+notebooks/01_train_final_model.ipynb
+notebooks/02_apply_final_model.ipynb
+```
+
+La primera notebook entrena el modelo, compara baseline y modelos candidatos, selecciona el modelo final y guarda los artefactos. La segunda notebook carga el modelo guardado y replica las predicciones sobre el conjunto de test interno.
+
+Modelo final seleccionado: `random_forest`.
+
+Metrica principal: `F1-score` para la clase positiva (`Churn = Yes`).
+
+Artefactos generados:
+
+```text
+models/final_model.joblib
+outputs/model_metrics.json
+outputs/model_selection_cv_results.csv
+outputs/feature_importance.csv
+outputs/test_predictions.csv
+outputs/test_predictions_from_saved_model.csv
+```
+
 ## Plan de desarrollo
 
 1. Definir metrica de evaluacion y particion de datos.
