@@ -50,9 +50,11 @@ notebooks/02_apply_final_model.ipynb
 
 La primera notebook entrena el modelo, compara baseline y modelos candidatos, selecciona el modelo final y guarda los artefactos. La segunda notebook carga el modelo guardado y replica las predicciones sobre el conjunto de test interno.
 
-Modelo final seleccionado: `random_forest`.
+Modelo final seleccionado: `logistic_regression`.
 
-Metrica principal: `F1-score` para la clase positiva (`Churn = Yes`).
+Metrica principal: `F2-score` para la clase positiva (`Churn = Yes`).
+
+Umbral de decision seleccionado: `0.31`.
 
 Artefactos generados:
 
@@ -60,6 +62,7 @@ Artefactos generados:
 models/final_model.joblib
 outputs/model_metrics.json
 outputs/model_selection_cv_results.csv
+outputs/threshold_search_results.csv
 outputs/feature_importance.csv
 outputs/test_predictions.csv
 outputs/test_predictions_from_saved_model.csv

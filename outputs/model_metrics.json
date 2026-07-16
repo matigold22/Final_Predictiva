@@ -1,15 +1,18 @@
 {
-  "selected_model": "random_forest",
+  "selected_model": "logistic_regression",
+  "decision_threshold": 0.31,
   "random_state": 42,
   "test_size": 0.2,
-  "primary_metric": "f1_positive_class",
-  "test_accuracy": 0.7679205110007097,
-  "test_precision": 0.5444234404536862,
-  "test_recall": 0.7700534759358288,
-  "test_f1": 0.6378737541528239,
-  "test_roc_auc": 0.8431088377379937,
+  "primary_metric": "f2_positive_class",
+  "test_accuracy": 0.6628814762242725,
+  "test_precision": 0.4358322744599746,
+  "test_recall": 0.9171122994652406,
+  "test_f1": 0.590869939707149,
+  "test_f2": 0.7512045554095489,
+  "test_roc_auc": 0.8446071972926192,
   "train_rows": 5634,
   "test_rows": 1409,
   "positive_rate_train": 0.2653532126375577,
-  "positive_rate_test": 0.2654364797728886
+  "positive_rate_test": 0.2654364797728886,
+  "positive_rate_predicted_test": 0.5585521646557843
 }
