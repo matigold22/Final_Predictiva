@@ -1,0 +1,66 @@
+feature,mean_abs_shap
+has_fiber_optic,0.6960512057002252
+tenure,0.5429514209988185
+MonthlyCharges,0.53025597768302
+avg_charge_per_tenure,0.5220025926407722
+is_month_to_month,0.44178296226207514
+has_internet_service,0.2684292414421414
+streaming_services_count,0.26461567307480827
+total_services_count,0.23142878660730237
+phone_or_addon_services_count,0.20981696265803007
+Contract_Two year,0.19931133697067882
+tenure_group_0-6,0.1844326384593331
+InternetService_Fiber optic,0.13987349977129715
+has_support_services,0.12246031414934927
+InternetService_DSL,0.11064456662707003
+paperless_billing_flag,0.1057924690643585
+is_electronic_check,0.1010567745206631
+Contract_One year,0.10100389217666669
+tenure_group_25-48,0.09177891100014629
+OnlineSecurity_No,0.07856434915882146
+Dependents_Yes,0.07416229800193329
+MultipleLines_No,0.07296370357653979
+Contract_Month-to-month,0.07075087562686161
+MultipleLines_Yes,0.06570000207302384
+TechSupport_No,0.06411171342961866
+tenure_group_13-24,0.061058161875893475
+digital_payment_risk,0.059065940753722006
+StreamingTV_No internet service,0.05615684141447816
+InternetService_No,0.05615684141447816
+OnlineBackup_No internet service,0.05615684141447816
+OnlineSecurity_No internet service,0.05615684141447816
+DeviceProtection_No internet service,0.05615684141447816
+StreamingMovies_No internet service,0.05615684141447816
+TechSupport_No internet service,0.05615684141447816
+PaperlessBilling_No,0.05445818653019487
+OnlineSecurity_Yes,0.053297599004354726
+charges_gap,0.048316440657129055
+TechSupport_Yes,0.045030932892159474
+Partner_No,0.04455616138913824
+gender_Female,0.04385848632663749
+StreamingMovies_Yes,0.03505210621606079
+SeniorCitizen,0.0338010177405072
+StreamingTV_Yes,0.03141512676873691
+support_services_count,0.029042756316803267
+gender_Male,0.027404913951782135
+Partner_Yes,0.026326946298618963
+StreamingMovies_No,0.026307325309811405
+tenure_group_7-12,0.024798979167286076
+StreamingTV_No,0.02465015120147071
+MultipleLines_No phone service,0.022780263280075822
+PhoneService_No,0.022780263280075822
+OnlineBackup_No,0.0206092210630057
+DeviceProtection_Yes,0.02022690605469647
+PaymentMethod_Bank transfer (automatic),0.01849068814447755
+PaymentMethod_Mailed check,0.017947110703223013
+PaperlessBilling_Yes,0.0162190484769011
+DeviceProtection_No,0.014493348418502142
+TotalCharges_was_missing,0.013750549319426895
+tenure_is_zero,0.013750549319426895
+Dependents_No,0.013435575893318008
+PaymentMethod_Credit card (automatic),0.012001593533635177
+OnlineBackup_Yes,0.010476656514732821
+TotalCharges,0.0029210043651325423
+PhoneService_Yes,0.0015813372644858377
+tenure_group_49+,0.0013754470098447785
+PaymentMethod_Electronic check,0.00032651487469518024

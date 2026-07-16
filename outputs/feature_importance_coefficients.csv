@@ -1,4 +1,4 @@
-feature,raw_feature,importance,abs_importance,direction
+feature,raw_feature,coefficient,abs_importance,direction
 has_fiber_optic,numeric__has_fiber_optic,0.6870192781039693,0.6870192781039693,Aumenta churn
 tenure,numeric__tenure,-0.6187118674866728,0.6187118674866728,Reduce churn
 MonthlyCharges,numeric__MonthlyCharges,-0.6184750005265399,0.6184750005265399,Reduce churn

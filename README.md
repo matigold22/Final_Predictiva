@@ -64,9 +64,14 @@ outputs/model_metrics.json
 outputs/model_selection_cv_results.csv
 outputs/threshold_search_results.csv
 outputs/feature_importance.csv
+outputs/feature_importance_coefficients.csv
+outputs/feature_importance_permutation_f2.csv
+outputs/feature_importance_shap.csv
 outputs/test_predictions.csv
 outputs/test_predictions_from_saved_model.csv
 ```
+
+Para interpretabilidad, la lectura principal recomendada es `feature_importance_permutation_f2.csv`, porque mide la contribucion de cada variable al F2 del modelo final. Los coeficientes y SHAP se incluyen como apoyo para explicar direccion e impacto de variables transformadas.
 
 ## Plan de desarrollo
 
