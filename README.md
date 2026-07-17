@@ -50,11 +50,13 @@ notebooks/02_apply_final_model.ipynb
 
 La primera notebook entrena el modelo, compara baseline y modelos candidatos, selecciona el modelo final y guarda los artefactos. La segunda notebook carga el modelo guardado y replica las predicciones sobre el conjunto de test interno.
 
-Modelo final seleccionado: `logistic_regression`.
+Modelo final seleccionado: `random_forest`.
 
-Metrica principal: `F2-score` para la clase positiva (`Churn = Yes`).
+Metrica principal para seleccion de modelos: `PR-AUC` / `average precision`.
 
-Umbral de decision seleccionado: `0.31`.
+Metrica para seleccion de umbral: `F2-score` para la clase positiva (`Churn = Yes`).
+
+Umbral de decision seleccionado: `0.22`.
 
 Artefactos generados:
 
@@ -64,14 +66,14 @@ outputs/model_metrics.json
 outputs/model_selection_cv_results.csv
 outputs/threshold_search_results.csv
 outputs/feature_importance.csv
-outputs/feature_importance_coefficients.csv
+outputs/feature_importance_model.csv
 outputs/feature_importance_permutation_f2.csv
 outputs/feature_importance_shap.csv
 outputs/test_predictions.csv
 outputs/test_predictions_from_saved_model.csv
 ```
 
-Para interpretabilidad, la lectura principal recomendada es `feature_importance_permutation_f2.csv`, porque mide la contribucion de cada variable al F2 del modelo final. Los coeficientes y SHAP se incluyen como apoyo para explicar direccion e impacto de variables transformadas.
+Para interpretabilidad, la lectura principal recomendada es `feature_importance_permutation_f2.csv`, porque mide la contribucion de cada variable al F2 del modelo final. La importancia interna del modelo y SHAP se incluyen como apoyo para explicar impacto de variables transformadas.
 
 ## Plan de desarrollo
 
