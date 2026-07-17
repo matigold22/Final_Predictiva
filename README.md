@@ -50,7 +50,7 @@ notebooks/02_apply_final_model.ipynb
 
 La primera notebook entrena el modelo, compara baseline y modelos candidatos, selecciona el modelo final y guarda los artefactos. La segunda notebook carga el modelo guardado y replica las predicciones sobre el conjunto de test interno.
 
-Modelo final seleccionado: `random_forest`.
+Modelo final seleccionado: `catboost`.
 
 Metrica principal para seleccion de modelos: `PR-AUC` / `average precision`.
 
@@ -64,6 +64,7 @@ Artefactos generados:
 models/final_model.joblib
 outputs/model_metrics.json
 outputs/model_selection_cv_results.csv
+outputs/hyperparameter_search_results.csv
 outputs/threshold_search_results.csv
 outputs/feature_importance.csv
 outputs/feature_importance_model.csv

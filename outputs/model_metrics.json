@@ -1,20 +1,26 @@
 {
-  "selected_model": "random_forest",
+  "selected_model": "catboost",
   "decision_threshold": 0.22,
+  "best_params": {
+    "model__depth": 4,
+    "model__iterations": 150,
+    "model__l2_leaf_reg": 3,
+    "model__learning_rate": 0.05
+  },
   "random_state": 42,
   "test_size": 0.2,
   "model_selection_metric": "pr_auc_average_precision",
   "threshold_selection_metric": "f2_positive_class",
-  "test_accuracy": 0.6195883605393896,
-  "test_precision": 0.4064665127020785,
-  "test_recall": 0.9411764705882353,
-  "test_f1": 0.567741935483871,
-  "test_f2": 0.7451312447078747,
-  "test_pr_auc": 0.6522380417661997,
-  "test_roc_auc": 0.8431088377379937,
+  "test_accuracy": 0.603264726756565,
+  "test_precision": 0.3971078976640712,
+  "test_recall": 0.9545454545454546,
+  "test_f1": 0.5608798114689709,
+  "test_f2": 0.7453027139874739,
+  "test_pr_auc": 0.6674988022194525,
+  "test_roc_auc": 0.8456844661448243,
   "train_rows": 5634,
   "test_rows": 1409,
   "positive_rate_train": 0.2653532126375577,
   "positive_rate_test": 0.2654364797728886,
-  "positive_rate_predicted_test": 0.6146202980837473
+  "positive_rate_predicted_test": 0.638041163946061
 }
