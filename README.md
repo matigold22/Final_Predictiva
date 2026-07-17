@@ -25,6 +25,7 @@ data/
   raw/              Datos originales
   processed/        Datos procesados si hace falta generarlos
 legacy/             Material del TP anterior usado como referencia
+  tp1_original/     Copia literal del TP1: EDA, PDF, README y dataset original
 models/             Modelo final entrenado
 notebooks/          Notebooks finales reproducibles
 outputs/            Predicciones y metricas exportadas
@@ -88,4 +89,4 @@ Para interpretabilidad, la lectura principal recomendada es `feature_importance_
 
 ## Nota
 
-Los archivos dentro de `legacy/` y `presentation/legacy/` son insumos del trabajo anterior. La entrega final debe quedar en `notebooks/`, `models/`, `outputs/` y `presentation/final/`.
+Los archivos dentro de `legacy/` y `presentation/legacy/` son insumos del trabajo anterior. En particular, `legacy/tp1_original/` conserva el EDA completo y la presentacion del primer examen con los nombres originales. La entrega final reproducible queda en `notebooks/`, `models/`, `outputs/` y `presentation/final/`.
