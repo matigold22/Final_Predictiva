@@ -83,45 +83,33 @@ def style_ax(ax):
 
 
 def make_assets(df, metrics, cv, thresholds, preds, perm, shap):
-    # EDA: churn rate vs multiple variables/categories.
+    # EDA: churn rate vs multiple variables/categories. More legible grouped bars.
     variables = {
         "Contract": "Contrato",
         "InternetService": "Internet",
-        "PaymentMethod": "Pago",
+        "PaymentMethod": "Metodo de pago",
         "OnlineSecurity": "Seguridad online",
         "TechSupport": "Soporte tecnico",
         "PaperlessBilling": "Factura digital",
-        "Dependents": "Dependientes",
-        "Partner": "Pareja",
     }
     rows = []
     for col, label in variables.items():
-        rates = df.groupby(col)["churn_num"].mean().sort_values()
+        rates = df.groupby(col)["churn_num"].mean().sort_values(ascending=False)
         for cat, rate in rates.items():
-            rows.append({"variable": label, "category": str(cat), "rate": rate})
-    plot = pd.DataFrame(rows)
-    order = (
-        plot.groupby("variable")["rate"].agg(lambda s: s.max() - s.min())
-        .sort_values(ascending=True)
-        .index.tolist()
-    )
-    y_map = {v: i for i, v in enumerate(order)}
-    fig, ax = plt.subplots(figsize=(9.2, 5.0))
-    for variable in order:
-        sub = plot[plot["variable"] == variable]
-        y = y_map[variable]
-        ax.plot([sub["rate"].min(), sub["rate"].max()], [y, y], color=M["line"], linewidth=4, zorder=1)
-        for _, r in sub.iterrows():
-            color = M["orange"] if r["rate"] >= df["churn_num"].mean() else M["blue"]
-            ax.scatter(r["rate"], y, s=95, color=color, edgecolor="white", linewidth=1.2, zorder=3)
-            ax.text(r["rate"] + 0.009, y + 0.06, r["category"][:18], fontsize=8, color=M["muted"])
+            rows.append({"variable": label, "category": str(cat), "label": f"{label}: {str(cat)}", "rate": rate})
+    plot = pd.DataFrame(rows).sort_values("rate", ascending=True)
+    fig, ax = plt.subplots(figsize=(9.5, 5.2))
+    colors = [M["orange"] if v >= df["churn_num"].mean() else M["blue"] for v in plot["rate"]]
+    ax.barh(plot["label"], plot["rate"], color=colors, height=0.58)
     ax.axvline(df["churn_num"].mean(), color=M["red"], linestyle="--", linewidth=1.5)
-    ax.text(df["churn_num"].mean() + 0.01, len(order) - 0.45, f"media {pct(df['churn_num'].mean())}", color=M["red"], fontsize=9, weight="bold")
-    ax.set_yticks(range(len(order)), order)
-    ax.set_xlim(0, 0.5)
-    ax.set_xlabel("Tasa de churn por categoria")
-    ax.set_title("Tasa de churn cruzada por variables relevantes", fontsize=14, weight="bold")
+    ax.text(df["churn_num"].mean() + 0.008, -0.75, f"media {pct(df['churn_num'].mean())}", color=M["red"], fontsize=9, weight="bold")
+    for i, r in enumerate(plot.itertuples()):
+        ax.text(r.rate + 0.006, i, pct(r.rate), va="center", fontsize=8.8, color=M["ink"], weight="bold")
+    ax.set_xlim(0, 0.52)
+    ax.set_xlabel("Tasa de churn")
+    ax.set_title("Tasa de churn por categoria: principales variables", fontsize=14, weight="bold")
     style_ax(ax)
+    ax.grid(axis="x", alpha=0.18)
     save(ASSETS / "eda_churn_rate_variables.png")
 
     # Model PR-AUC with 10 tests.
@@ -178,10 +166,24 @@ def make_assets(df, metrics, cv, thresholds, preds, perm, shap):
     ax.set_xlim(0.1, 0.9)
     ax.set_ylim(0, 1.02)
     ax.set_xlabel("Umbral")
-    ax.set_title("Umbral operativo: trade-off precision / recall", fontsize=14, weight="bold")
+    ax.set_title("Umbral operativo: balance precision / recall", fontsize=14, weight="bold")
     ax.legend(frameon=False, loc="upper right")
     style_ax(ax)
     save(ASSETS / "threshold_precision_recall.png")
+
+    # Confusion matrix.
+    cm = pd.crosstab(preds["y_true_label"], preds["churn_prediction_label"]).reindex(index=["No", "Yes"], columns=["No", "Yes"], fill_value=0)
+    fig, ax = plt.subplots(figsize=(5.0, 4.2))
+    im = ax.imshow(cm.values, cmap="Blues")
+    ax.set_xticks([0, 1], ["Pred No", "Pred Churn"])
+    ax.set_yticks([0, 1], ["Real No", "Real Churn"])
+    ax.set_title("Matriz de confusion en test", fontsize=14, weight="bold")
+    for i in range(2):
+        for j in range(2):
+            ax.text(j, i, str(cm.values[i, j]), ha="center", va="center", fontsize=17, weight="bold", color=M["ink"])
+    ax.tick_params(labelsize=10)
+    plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    save(ASSETS / "confusion_matrix.png")
 
     # Feature importance.
     top = perm.head(10).sort_values("importance_mean")
@@ -199,23 +201,6 @@ def make_assets(df, metrics, cv, thresholds, preds, perm, shap):
     ax.set_title("SHAP global del modelo final", fontsize=14, weight="bold")
     style_ax(ax)
     save(ASSETS / "importance_shap.png")
-
-    # Capture curve.
-    ranked = preds.sort_values("churn_probability", ascending=False).copy()
-    ranked["portfolio_share"] = np.arange(1, len(ranked) + 1) / len(ranked)
-    ranked["captured_churn"] = ranked["y_true"].cumsum() / ranked["y_true"].sum()
-    fig, ax = plt.subplots(figsize=(7.8, 4.3))
-    ax.plot(ranked["portfolio_share"], ranked["captured_churn"], color=M["blue"], linewidth=2.8)
-    ax.plot([0, 1], [0, 1], color=M["muted"], linestyle="--")
-    for cut in [0.2, 0.4, 0.6]:
-        captured = ranked.loc[ranked["portfolio_share"] <= cut, "y_true"].sum() / ranked["y_true"].sum()
-        ax.scatter([cut], [captured], color=M["orange"], s=70)
-        ax.text(cut + 0.02, captured, f"Top {int(cut*100)}%: {pct(captured,0)}", fontsize=9, weight="bold")
-    ax.set_xlabel("Porcentaje de cartera accionada")
-    ax.set_ylabel("Churners capturados")
-    ax.set_title("Curva de captura de churners", fontsize=14, weight="bold")
-    style_ax(ax)
-    save(ASSETS / "capture_curve.png")
 
 
 def add_bg(slide):
@@ -292,6 +277,10 @@ def footer(slide, n):
     textbox(slide, f"Churn Telco · Examen Final · {n:02d}", 0.48, 5.28, 4.5, 0.18, 7.5, MUTED)
 
 
+def small_note(slide, text, x, y, w, h, color=MUTED):
+    return textbox(slide, text, x, y, w, h, 9.5, color)
+
+
 def build_deck(df, metrics, cv, preds, checks):
     prs = Presentation()
     prs.slide_width = Inches(10)
@@ -304,135 +293,159 @@ def build_deck(df, metrics, cv, preds, checks):
         footer(s, n)
         return s
 
+    raw_predictors = 19
+    total_vars = 21
+    churn_count = int(df["churn_num"].sum())
+    no_churn_count = int(len(df) - churn_count)
+
     # 1 portada
     s = prs.slides.add_slide(prs.slide_layouts[6])
     bg = s.shapes.add_shape(1, 0, 0, Inches(10), Inches(5.625))
     bg.fill.solid(); bg.fill.fore_color.rgb = INK; bg.line.fill.background()
-    textbox(s, "ANALISIS PREDICTIVO · EXAMEN FINAL", 0.6, 0.55, 5.5, 0.3, 9.5, RGBColor(146, 196, 255), True)
+    textbox(s, "ANALISIS PREDICTIVO - EXAMEN FINAL", 0.6, 0.55, 5.5, 0.3, 9.5, RGBColor(146, 196, 255), True)
     textbox(s, "Prediccion de churn en clientes Telco", 0.6, 1.15, 6.8, 0.95, 31, WHITE, True)
-    textbox(s, "Modelo final CatBoost · seleccion por PR-AUC · umbral optimizado por F2", 0.64, 2.1, 6.8, 0.35, 13, RGBColor(205, 215, 230))
-    card(s, "CHURN", pct(df["churn_num"].mean()), "tasa observada", 0.75, 3.55, 1.7, 0.95, ORANGE)
-    card(s, "CLIENTES", f"{len(df):,}".replace(",", "."), "dataset IBM", 2.75, 3.55, 1.7, 0.95, TEAL)
-    card(s, "PR-AUC TEST", num(metrics["test_pr_auc"]), "modelo final", 4.75, 3.55, 1.7, 0.95, GREEN)
-    card(s, "RECALL", pct(metrics["test_recall"]), "umbral 0.31", 6.75, 3.55, 1.7, 0.95, BLUE)
+    textbox(s, "Caso de negocio, modelo predictivo y accion comercial sobre clientes con riesgo de baja", 0.64, 2.1, 7.3, 0.35, 13, RGBColor(205, 215, 230))
+    card(s, "CLIENTES", f"{len(df):,}".replace(",", "."), "dataset IBM", 0.75, 3.55, 1.7, 0.95, TEAL)
+    card(s, "CHURN", pct(df["churn_num"].mean()), f"{churn_count} clientes", 2.75, 3.55, 1.7, 0.95, ORANGE)
+    card(s, "MODELO", "CatBoost", "mejor PR-AUC", 4.75, 3.55, 1.7, 0.95, GREEN)
+    card(s, "RECALL", pct(metrics["test_recall"]), "test", 6.75, 3.55, 1.7, 0.95, BLUE)
 
-    # 2 caso
-    s = new("1 · Caso de negocio", "Priorizar retencion antes de que ocurra la baja", 2)
+    # 2 caso de negocio
+    s = new("1 - Caso de negocio", "Predecir churn para priorizar retencion rentable", 2)
+    card(s, "TARGET", "Churn", "Yes si el cliente se dio de baja", 0.65, 1.32, 2.1, 0.95, ORANGE)
+    card(s, "BASE", f"{len(df):,}".replace(",", "."), f"{churn_count} churners vs {no_churn_count} no churn", 3.0, 1.32, 2.1, 0.95, TEAL)
+    card(s, "TASA", pct(df["churn_num"].mean()), "clase positiva minoritaria", 5.35, 1.32, 1.65, 0.95, RED)
+    card(s, "OBJETIVO", "score", "probabilidad de churn por cliente", 7.25, 1.32, 2.0, 0.95, BLUE)
     bullets(s, [
-        "Objetivo: estimar riesgo de churn por cliente activo.",
-        "Decision: ordenar la cartera para acciones de retencion.",
-        "Valor: usar datos de contrato, servicios y facturacion para llegar antes.",
-        "Trade-off: priorizamos recall, pero monitoreamos precision para no sobreactuar."
-    ], 0.7, 1.45, 5.2, 2.25, 14)
-    card(s, "SALIDA", "score", "probabilidad de churn", 6.35, 1.45, 2.6, 0.95, BLUE)
-    card(s, "USO", "ranking", "agenda de retencion", 6.35, 2.65, 2.6, 0.95, GREEN)
-    card(s, "RIESGO", "falsos +", "costo comercial", 6.35, 3.85, 2.6, 0.95, RED)
+        "Problema: una telco pierde ingreso recurrente cuando un cliente abandona el servicio.",
+        "Decision de negocio: ordenar clientes activos por riesgo y priorizar acciones de retencion.",
+        "Regla economica: adquirir un cliente nuevo suele costar 5 a 25 veces mas que retener uno existente (HBR/Bain).",
+        "Impacto esperado: incluso mejoras chicas de retencion pueden tener efecto grande en rentabilidad; el modelo ayuda a enfocar el esfuerzo comercial."
+    ], 0.78, 2.75, 8.5, 1.55, 12.2)
+    small_note(s, "Nota: el modelo no decide la oferta; entrega un ranking para que negocio defina accion, costo y capacidad.", 0.85, 4.75, 8.2, 0.28)
 
     # 3 dataset
-    s = new("2 · Dataset", "7.043 clientes, 21 variables y una clase positiva minoritaria", 3)
-    card(s, "TARGET", "Churn", "Yes / No", 0.65, 1.35, 1.8, 1.0, ORANGE)
-    card(s, "POSITIVOS", pct(df["churn_num"].mean()), "churn real", 2.75, 1.35, 1.8, 1.0, RED)
-    card(s, "LIMPIEZA", "11", "TotalCharges vacio, tenure=0", 4.85, 1.35, 2.1, 1.0, TEAL)
-    card(s, "FEATURES", "originales + FE", "sin target encoding", 7.25, 1.35, 2.0, 1.0, BLUE)
-    bullets(s, [
-        "Variables demograficas: genero, senior, pareja, dependientes.",
-        "Servicios: internet, seguridad, soporte, backup, streaming.",
-        "Contrato/facturacion: tenure, tipo de contrato, metodo de pago, cargos.",
-        "Limitacion estructural: no hay fecha de corte ni historial temporal."
-    ], 0.8, 2.95, 8.5, 1.45, 12.5)
+    s = new("2 - Dataset", "Variables predictoras agrupadas y limpieza realizada", 3)
+    card(s, "TOTAL", str(total_vars), "columnas originales", 0.55, 1.25, 1.55, 0.82, BLUE)
+    card(s, "PREDICTORAS", str(raw_predictors), "sin customerID ni Churn", 2.28, 1.25, 1.75, 0.82, GREEN)
+    card(s, "TARGET", "1", "Churn", 4.23, 1.25, 1.25, 0.82, ORANGE)
+    card(s, "ID", "1", "excluido del modelo", 5.68, 1.25, 1.45, 0.82, RED)
+    card(s, "LIMPIEZA", "11", "TotalCharges vacio", 7.35, 1.25, 1.9, 0.82, TEAL)
+    rows = [
+        "Demograficas (4): genero, senior, pareja, dependientes. Senal baja/moderada; dependientes y pareja reducen churn observado.",
+        "Servicios (9): telefono, internet, seguridad, backup, proteccion, soporte, streaming. Fibra y falta de soporte/seguridad elevan riesgo.",
+        "Contrato (2): tenure y tipo de contrato. Contrato mensual y baja antiguedad son los drivers mas fuertes.",
+        "Facturacion (4): paperless, metodo de pago, MonthlyCharges, TotalCharges. Pago electronico y ciertos niveles de cargo aportan senal."
+    ]
+    bullets(s, rows, 0.75, 2.45, 8.6, 1.9, 11.3)
+    small_note(s, "Limpieza: TotalCharges venia como texto; los 11 vacios correspondian a clientes nuevos con tenure = 0 y se imputaron como 0. Se agregaron features derivadas reproducibles.", 0.78, 4.72, 8.5, 0.35)
 
     # 4 EDA
-    s = new("3 · EDA", "La tasa de churn cambia mucho segun contrato, servicio y soporte", 4)
-    image(s, ASSETS / "eda_churn_rate_variables.png", 0.55, 1.25, 8.95)
+    s = new("3 - EDA", "La tasa de churn varia fuerte por categoria", 4)
+    image(s, ASSETS / "eda_churn_rate_variables.png", 0.55, 1.18, 8.9)
+    small_note(s, "Lectura: contrato mensual, fibra optica y ausencia de soporte/seguridad se ubican por encima de la media de churn. Esto anticipa variables importantes del modelo.", 0.75, 4.88, 8.45, 0.3)
 
-    # 5 EDA 2
-    s = new("3 · EDA", "El patron principal: clientes nuevos y poco anclados", 5)
-    image(s, ASSETS / "eda_target_tenure.png", 0.6, 1.3, 5.0)
+    # 5 evaluacion metricas
+    s = new("4 - Evaluacion", "Por que PR-AUC para modelo y F2 para umbral", 5)
+    card(s, "DESBALANCE", pct(df["churn_num"].mean()), "churn positivo", 0.65, 1.35, 1.9, 0.95, RED)
+    card(s, "NO SKILL", num(df["churn_num"].mean()), "PR-AUC base", 2.85, 1.35, 1.8, 0.95, ORANGE)
+    card(s, "PR-AUC", "ranking", "compara modelos", 4.95, 1.35, 1.8, 0.95, BLUE)
+    card(s, "F2", "umbral", "prioriza recall", 7.05, 1.35, 1.8, 0.95, GREEN)
     bullets(s, [
-        "Contrato mensual y baja antiguedad concentran mayor riesgo.",
-        "Fibra optica aparece como señal predictiva relevante.",
-        "Servicios de soporte/seguridad reducen riesgo observado.",
-        "Estas relaciones son asociaciones predictivas, no causalidad."
-    ], 6.05, 1.55, 3.25, 2.5, 12.5)
+        "Accuracy engana: predecir siempre No Churn acierta 73,5% pero no detecta ningun churner.",
+        "PR-AUC evalua si el modelo pone arriba del ranking a los clientes que realmente churnean.",
+        "F2 se usa despues para elegir el punto de corte: pesa mas recall, pero precision sigue entrando en la formula.",
+        "Separar ranking y umbral evita mezclar dos decisiones distintas."
+    ], 0.9, 2.8, 8.1, 1.55, 12.5)
 
-    # 6 evaluacion
-    s = new("4 · Evaluacion", "PR-AUC para elegir modelo; F2 para elegir umbral", 6)
-    card(s, "TRAIN", "5.634", "80%, estratificado", 0.65, 1.35, 1.8, 1.0, BLUE)
-    card(s, "TEST", "1.409", "20%, cerrado", 2.75, 1.35, 1.8, 1.0, TEAL)
-    card(s, "CV", "3 folds", "solo train", 4.85, 1.35, 1.8, 1.0, GREEN)
-    card(s, "NO SKILL", num(df["churn_num"].mean()), "PR-AUC base", 6.95, 1.35, 1.8, 1.0, RED)
+    # 6 validacion
+    s = new("4 - Evaluacion", "Validacion: todo se decide dentro de train", 6)
+    card(s, "TRAIN", "5.634", "80%, estratificado", 0.75, 1.35, 1.7, 0.95, BLUE)
+    card(s, "TEST", "1.409", "20%, cerrado", 2.75, 1.35, 1.7, 0.95, TEAL)
+    card(s, "CV", "3 folds", "solo train", 4.75, 1.35, 1.7, 0.95, GREEN)
+    card(s, "SEED", "42", "reproducible", 6.75, 1.35, 1.7, 0.95, VIOLET)
     bullets(s, [
-        "PR-AUC mide la calidad del ranking en una clase positiva minoritaria.",
-        "F2 prioriza recall para el punto operativo, sin ignorar precision.",
-        "El test no se usa para tuning, seleccion de modelo ni seleccion de umbral.",
-        "Pipeline: imputacion, escalado y one-hot se ajustan dentro de cada fold."
-    ], 0.85, 3.0, 8.4, 1.4, 12.5)
+        "Split estratificado: la proporcion de churn queda estable en train y test.",
+        "GridSearchCV: cada modelo se compara con la misma validacion cruzada y la misma metrica PR-AUC.",
+        "Pipeline: imputacion, escalado y one-hot se ajustan dentro de cada fold, evitando leakage de preprocesamiento.",
+        "El umbral se elige en validacion interna del train; el test se usa una sola vez para reportar performance final."
+    ], 0.95, 2.85, 8.0, 1.45, 12.3)
 
     # 7 baseline
-    s = new("5 · Baseline", "La regresion logistica deja una vara alta e interpretable", 7)
+    s = new("5 - Baseline", "Baseline paso a paso: Dummy y regresion logistica", 7)
     cvi = cv.set_index("model")
-    card(s, "DUMMY PR-AUC", num(cvi.loc["dummy_most_frequent", "pr_auc_mean"]), "sin informacion", 0.8, 1.45, 2.0, 1.0, RED)
-    card(s, "LOGISTIC PR-AUC", num(cvi.loc["logistic_regression", "pr_auc_mean"]), "baseline fuerte", 3.1, 1.45, 2.0, 1.0, BLUE)
-    card(s, "LOGISTIC F2", num(cvi.loc["logistic_regression", "f2_mean"]), "recall alto", 5.4, 1.45, 2.0, 1.0, GREEN)
+    card(s, "Dummy", num(cvi.loc["dummy_most_frequent", "pr_auc_mean"]), "predice clase mayoritaria", 0.7, 1.35, 2.1, 0.95, RED)
+    card(s, "Logistic", num(cvi.loc["logistic_regression", "pr_auc_mean"]), "PR-AUC CV", 3.05, 1.35, 2.1, 0.95, BLUE)
+    card(s, "Predictoras", str(raw_predictors), "variables originales + FE", 5.4, 1.35, 2.1, 0.95, GREEN)
+    card(s, "Logistic F2", num(cvi.loc["logistic_regression", "f2_mean"]), "baseline fuerte", 7.75, 1.35, 1.55, 0.95, ORANGE)
     bullets(s, [
-        "La logistica queda cerca de CatBoost: el problema tiene señal lineal fuerte.",
-        "Se usa como baseline interpretable para exigir que modelos complejos justifiquen su mejora.",
-        "El dummy confirma que accuracy no alcanza: predecir siempre No Churn no sirve para retener."
-    ], 1.05, 3.05, 7.9, 1.25, 13)
+        "1. Dummy sirve como piso: si un modelo no supera la prevalencia en PR-AUC, no aporta informacion.",
+        "2. Regresion logistica es baseline real: simple, interpretable y rapida de entrenar.",
+        "3. Usa el mismo pipeline y las mismas variables que los modelos complejos, por eso la comparacion es justa.",
+        "4. Queda cerca del ganador, lo que muestra que el problema tiene senal clara y no depende solo de modelos sofisticados."
+    ], 0.85, 2.75, 8.4, 1.7, 12.2)
 
     # 8 seleccion
-    s = new("6 · Seleccion de modelos", "10 pruebas comparadas por PR-AUC", 8)
-    image(s, ASSETS / "modelos_10_prauc.png", 0.55, 1.22, 6.45)
-    top = cv.sort_values("pr_auc_mean", ascending=False).head(3)
-    y = 1.45
-    for _, r in top.iterrows():
-        card(s, r["model"], num(r["pr_auc_mean"]), f"F2 {num(r['f2_mean'])} · Precision {num(r['precision_mean'])}", 7.25, y, 2.25, 0.78, ORANGE if r["model"] == metrics["selected_model"] else BLUE)
-        y += 0.95
-    textbox(s, "CatBoost gana por poco. Logistic y Gradient Boosting quedan cerca, por eso se reporta el ranking completo y no solo el ganador.", 7.25, 4.3, 2.25, 0.7, 9.8, MUTED)
+    s = new("6 - Seleccion de modelos", "10 pruebas comparadas por PR-AUC", 8)
+    image(s, ASSETS / "modelos_10_prauc.png", 0.55, 1.12, 5.85)
+    bullets(s, [
+        "CatBoost queda primero por PR-AUC, pero la diferencia con Gradient Boosting y Logistic es chica.",
+        "Gradient Boosting clasico logra mayor precision, pero menor recall: es mas conservador.",
+        "Logistic Regression confirma una senal lineal fuerte y funciona como alternativa simple de defensa.",
+        "LightGBM fue probado; en esta grilla no supera a CatBoost ni a los baselines fuertes."
+    ], 6.55, 1.38, 3.0, 2.65, 11.2)
+    small_note(s, "Conclusion: el ganador no se elige por marketing del algoritmo, sino por PR-AUC bajo la misma validacion.", 6.55, 4.45, 3.0, 0.45)
 
     # 9 modelo final
-    s = new("7 · Modelo final", "CatBoost: mejor PR-AUC y umbral F2 = 0.31", 9)
-    card(s, "PR-AUC", num(metrics["test_pr_auc"]), "test", 0.6, 1.35, 1.55, 0.95, ORANGE)
-    card(s, "ROC-AUC", num(metrics["test_roc_auc"]), "test", 2.35, 1.35, 1.55, 0.95, BLUE)
-    card(s, "Recall", pct(metrics["test_recall"]), "detecta churn", 4.1, 1.35, 1.55, 0.95, GREEN)
-    card(s, "Precision", pct(metrics["test_precision"]), "contactos utiles", 5.85, 1.35, 1.55, 0.95, RED)
-    card(s, "F2", num(metrics["test_f2"]), "umbral", 7.6, 1.35, 1.55, 0.95, TEAL)
-    image(s, ASSETS / "threshold_precision_recall.png", 0.75, 2.75, 5.2)
-    image(s, ASSETS / "capture_curve.png", 5.95, 2.75, 3.45)
+    s = new("7 - Modelo final", "CatBoost: buen ranking y umbral orientado a detectar churn", 9)
+    card(s, "PR-AUC", num(metrics["test_pr_auc"]), "test", 0.6, 1.25, 1.55, 0.85, ORANGE)
+    card(s, "Recall", pct(metrics["test_recall"]), "test", 2.35, 1.25, 1.55, 0.85, GREEN)
+    card(s, "Precision", pct(metrics["test_precision"]), "test", 4.1, 1.25, 1.55, 0.85, RED)
+    card(s, "F2", num(metrics["test_f2"]), "umbral 0.31", 5.85, 1.25, 1.55, 0.85, BLUE)
+    card(s, "Accionados", pct(metrics["positive_rate_predicted_test"]), "del test", 7.6, 1.25, 1.55, 0.85, VIOLET)
+    image(s, ASSETS / "threshold_precision_recall.png", 0.62, 2.45, 4.85)
+    image(s, ASSETS / "confusion_matrix.png", 5.95, 2.25, 3.05)
+    small_note(s, "El umbral 0.31 prioriza recall: captura gran parte de los churners, a costa de falsos positivos. En negocio real, el corte deberia ajustarse por costo/capacidad.", 0.82, 4.88, 8.3, 0.32)
 
     # 10 interpretacion
-    s = new("7 · Modelo final", "Interpretacion: contrato, tenure y señales de servicio", 10)
-    image(s, ASSETS / "importance_permutation.png", 0.55, 1.25, 4.65)
-    image(s, ASSETS / "importance_shap.png", 5.05, 1.25, 4.55)
-    textbox(s, "Permutation importance esta alineada a F2; SHAP resume impacto global. No es causalidad: es señal predictiva para priorizar.", 0.85, 4.85, 8.2, 0.35, 10.5, MUTED, align=PP_ALIGN.CENTER)
+    s = new("7 - Modelo final", "Interpretacion: consistente con el EDA", 10)
+    image(s, ASSETS / "importance_permutation.png", 0.55, 1.18, 4.65)
+    image(s, ASSETS / "importance_shap.png", 5.05, 1.18, 4.55)
+    textbox(s, "Conclusion: contrato mensual, baja antiguedad, cargos acumulados y senales de soporte/seguridad vuelven a aparecer como drivers predictivos. Esto coincide con el EDA, pero no implica causalidad.", 0.85, 4.78, 8.25, 0.48, 10.5, MUTED, align=PP_ALIGN.CENTER)
 
-    # 11 limitaciones
-    s = new("8 · Limitaciones / mejoras", "La mayor mejora no es otro algoritmo: son datos y decision", 11)
+    # 11 limitaciones y mejoras
+    s = new("8 - Limitaciones / mejoras", "Que falta para llevarlo a una decision productiva", 11)
+    textbox(s, "Limitaciones", 0.75, 1.35, 3.8, 0.3, 16, INK, True)
     bullets(s, [
-        "No hay corte temporal real: validar con meses futuros seria la mejora metodologica mas importante.",
-        "Precision moderada: el umbral debe ajustarse con costos reales y capacidad comercial.",
-        "Variables redundantes: algunas originales y derivadas comparten informacion.",
-        "Agregar reclamos, uso real, tickets, promociones, cambios de plan y satisfaccion.",
-        "Uplift modeling: contactar clientes persuadibles, no solo clientes con alto riesgo."
-    ], 0.8, 1.45, 8.3, 2.5, 13)
-    card(s, "LEAKAGE", "sin señal grave", "ID fuera, target fuera, pipeline por fold", 0.9, 4.25, 2.5, 0.85, GREEN)
-    card(s, "OVERFIT", "controlado", "gap F2 bajo/moderado", 3.75, 4.25, 2.5, 0.85, BLUE)
-    card(s, "PROXIMO PASO", "costos", "umbral por valor esperado", 6.6, 4.25, 2.5, 0.85, ORANGE)
+        "Dataset sin dimension temporal: no simula pasado a futuro.",
+        "No hay costos reales de contacto, oferta ni perdida de cliente.",
+        "Precision moderada: muchas acciones comerciales no terminarian en churn real.",
+        "Variables redundantes entre originales y derivadas pueden repartir importancia.",
+        "No hay datos de reclamos, uso, satisfaccion ni competencia."
+    ], 0.75, 1.82, 4.0, 2.75, 11.5)
+    textbox(s, "Posibles mejoras", 5.25, 1.35, 3.8, 0.3, 16, INK, True)
+    bullets(s, [
+        "Validar con meses futuros y monitorear drift.",
+        "Elegir umbral por valor esperado: probabilidad x valor cliente x efectividad x costo.",
+        "Agregar tickets, NPS, uso de servicio, promociones y cambios de plan.",
+        "Calibrar probabilidades si el score se usa como ranking economico.",
+        "Probar uplift modeling para contactar clientes persuadibles."
+    ], 5.25, 1.82, 4.0, 2.75, 11.5)
 
     # 12 conclusiones
-    s = new("9 · Conclusiones", "Un ranking accionable para retencion", 12)
-    card(s, "METODO", "PR-AUC + F2", "ranking y decision", 0.75, 1.35, 2.35, 1.05, BLUE)
-    card(s, "MODELO", "CatBoost", "mejor CV", 3.4, 1.35, 2.35, 1.05, ORANGE)
-    card(s, "NEGOCIO", "priorizar", "agenda de retencion", 6.05, 1.35, 2.35, 1.05, GREEN)
+    s = new("9 - Conclusiones", "Un ranking accionable para priorizar retencion", 12)
+    card(s, "Mejor modelo", "CatBoost", "mejor PR-AUC en CV", 0.7, 1.25, 2.0, 0.95, ORANGE)
+    card(s, "PR-AUC test", num(metrics["test_pr_auc"]), "ranking", 3.0, 1.25, 1.8, 0.95, BLUE)
+    card(s, "Recall", pct(metrics["test_recall"]), "churn detectado", 5.1, 1.25, 1.8, 0.95, GREEN)
+    card(s, "Precision", pct(metrics["test_precision"]), "contactos utiles", 7.2, 1.25, 1.8, 0.95, RED)
     bullets(s, [
-        "El churn se concentra en perfiles con contrato mensual, baja antiguedad y menor anclaje de servicios.",
-        "CatBoost fue el mejor modelo por PR-AUC dentro de 10 pruebas comparables.",
-        "El umbral actual prioriza recall; debe calibrarse con costos y capacidad real.",
-        "El modelo es una herramienta de priorizacion, no una explicacion causal del abandono."
-    ], 0.95, 3.0, 8.1, 1.45, 13.5)
+        "El modelo permite ordenar clientes por riesgo y priorizar una agenda de retencion.",
+        "Los perfiles de mayor riesgo combinan contrato mensual, baja antiguedad y menor anclaje de servicios.",
+        "Accion sugerida: contactar primero clientes de alto score con propuestas de permanencia, soporte o beneficios segun valor del cliente.",
+        "Antes de produccion: definir costo de accion, capacidad del equipo y umbral por rentabilidad esperada."
+    ], 0.9, 2.85, 8.2, 1.55, 13)
 
     prs.save(PPTX)
-
 
 def main():
     df, metrics, cv, thresholds, preds, perm, shap, checks = load()
