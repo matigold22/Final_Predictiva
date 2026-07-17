@@ -56,7 +56,7 @@ Metrica principal para seleccion de modelos: `PR-AUC` / `average precision`.
 
 Metrica para seleccion de umbral: `F2-score` para la clase positiva (`Churn = Yes`).
 
-Umbral de decision seleccionado: `0.22`.
+Umbral de decision seleccionado: `0.31`.
 
 Artefactos generados:
 
