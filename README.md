@@ -1,92 +1,103 @@
-# Telco Churn - Examen Final Predictivo
+# Final Predictiva - Churn Telco
 
-Repositorio individual para desarrollar un modelo predictivo de churn en clientes de telecomunicaciones.
+Repositorio individual para el examen final de Analisis Predictivo. El objetivo es predecir churn en clientes Telco y generar una entrega reproducible: entrenamiento del modelo final, aplicacion sobre test, resultados y presentacion.
 
-## Objetivo
-
-Predecir si un cliente tiene riesgo de abandonar el servicio (`Churn`) a partir de sus caracteristicas demograficas, contractuales, de facturacion y servicios contratados.
-
-El caso de negocio es priorizar acciones de retencion sobre clientes con mayor probabilidad de churn.
-
-## Dataset
-
-Dataset base: IBM Telco Customer Churn.
-
-Archivo de entrada:
+## Estructura
 
 ```text
-data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
+EDA/
+  TP1_Analisis_Predictivo_1Q2026.ipynb
+  TP1_Analisis_Predictivo_1Q2026 (2).ipynb
+  TP1 - Churn en clientes de Telco (3).pdf
+  WA_Fn-UseC_-Telco-Customer-Churn.csv
+  README_TP1.md
+
+datos/
+  raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
+  processed/
+
+notebooks/
+  01_train_final_model.ipynb
+  02_apply_final_model.ipynb
+
+modelos/
+  final_model.joblib
+  resultados/
+
+presentacion/
+  final/
+
+README.md
+notas.md
 ```
 
-## Estructura del repositorio
+## Que hay en cada carpeta
+
+`EDA/` conserva el material del primer trabajo tal cual: notebooks exploratorias, PDF y dataset usado en ese analisis.
+
+`datos/` contiene los datos usados por los notebooks finales. El archivo principal es:
 
 ```text
-data/
-  raw/              Datos originales
-  processed/        Datos procesados si hace falta generarlos
-legacy/             Material del TP anterior usado como referencia
-  tp1_original/     Copia literal del TP1: EDA, PDF, README y dataset original
-models/             Modelo final entrenado
-notebooks/          Notebooks finales reproducibles
-outputs/            Predicciones y metricas exportadas
-presentation/
-  legacy/           Presentacion anterior como insumo
-  final/            Presentacion final del examen
+datos/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
 ```
 
-## Entregables esperados
-
-La consigna pide:
-
-1. Presentacion final en PDF o PPT formato ITBA.
-2. Notebook o script que entrene y guarde el modelo final.
-3. Notebook o script que aplique el modelo final a los datos de test y replique el archivo enviado.
-
-## Notebooks finales
+`notebooks/` contiene los dos archivos que pide la consigna:
 
 ```text
 notebooks/01_train_final_model.ipynb
 notebooks/02_apply_final_model.ipynb
 ```
 
-La primera notebook entrena el modelo, compara baseline y modelos candidatos, selecciona el modelo final y guarda los artefactos. La segunda notebook carga el modelo guardado y replica las predicciones sobre el conjunto de test interno.
-
-Modelo final seleccionado: `catboost`.
-
-Metrica principal para seleccion de modelos: `PR-AUC` / `average precision`.
-
-Metrica para seleccion de umbral: `F2-score` para la clase positiva (`Churn = Yes`).
-
-Umbral de decision seleccionado: `0.31`.
-
-Artefactos generados:
+`modelos/` contiene el modelo final guardado y los resultados exportados:
 
 ```text
-models/final_model.joblib
-outputs/model_metrics.json
-outputs/model_selection_cv_results.csv
-outputs/hyperparameter_search_results.csv
-outputs/threshold_search_results.csv
-outputs/feature_importance.csv
-outputs/feature_importance_model.csv
-outputs/feature_importance_permutation_f2.csv
-outputs/feature_importance_shap.csv
-outputs/test_predictions.csv
-outputs/test_predictions_from_saved_model.csv
+modelos/final_model.joblib
+modelos/resultados/model_metrics.json
+modelos/resultados/model_selection_cv_results.csv
+modelos/resultados/hyperparameter_search_results.csv
+modelos/resultados/threshold_search_results.csv
+modelos/resultados/test_predictions.csv
+modelos/resultados/test_predictions_from_saved_model.csv
 ```
 
-Para interpretabilidad, la lectura principal recomendada es `feature_importance_permutation_f2.csv`, porque mide la contribucion de cada variable al F2 del modelo final. La importancia interna del modelo y SHAP se incluyen como apoyo para explicar impacto de variables transformadas.
+`presentacion/` contiene la presentacion final y los graficos usados para armarla.
 
-## Plan de desarrollo
+## Modelo final
 
-1. Definir metrica de evaluacion y particion de datos.
-2. Construir un baseline.
-3. Comparar modelos candidatos.
-4. Seleccionar y describir el modelo final.
-5. Guardar el modelo final de forma reproducible.
-6. Generar predicciones con el modelo guardado.
-7. Armar la presentacion final con las secciones pedidas.
+Modelo seleccionado: `CatBoost`.
 
-## Nota
+Metrica principal de seleccion de modelos: `PR-AUC`, adecuada para clases desbalanceadas.
 
-Los archivos dentro de `legacy/` y `presentation/legacy/` son insumos del trabajo anterior. En particular, `legacy/tp1_original/` conserva el EDA completo y la presentacion del primer examen con los nombres originales. La entrega final reproducible queda en `notebooks/`, `models/`, `outputs/` y `presentation/final/`.
+Metrica para seleccion de umbral: `F2-score`, priorizando recall sin ignorar precision.
+
+Umbral final: `0.31`.
+
+Metricas principales en test:
+
+```text
+PR-AUC:    0.664
+Recall:    90.9%
+Precision: 42.4%
+F2:        0.740
+```
+
+## Como reproducir
+
+1. Ejecutar `notebooks/01_train_final_model.ipynb`.
+   - Entrena modelos candidatos.
+   - Selecciona el modelo final.
+   - Guarda `modelos/final_model.joblib`.
+   - Exporta metricas y predicciones en `modelos/resultados/`.
+
+2. Ejecutar `notebooks/02_apply_final_model.ipynb`.
+   - Carga el modelo guardado.
+   - Reconstruye las features.
+   - Replica las predicciones del test interno.
+
+## Notas
+
+Las limitaciones, mejoras posibles y conclusiones para defender el trabajo estan en:
+
+```text
+notas.md
+```

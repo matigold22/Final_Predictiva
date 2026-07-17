@@ -11,13 +11,13 @@ from pptx.util import Inches, Pt
 
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "presentation" / "final"
+OUT = ROOT / "presentacion" / "final"
 ASSETS = OUT / "assets_redesign"
 ASSETS.mkdir(parents=True, exist_ok=True)
 PPTX = OUT / "Presentacion_Final_Churn_Redesign.pptx"
 
-DATA = ROOT / "data" / "raw" / "WA_Fn-UseC_-Telco-Customer-Churn.csv"
-OUTPUTS = ROOT / "outputs"
+DATA = ROOT / "datos" / "raw" / "WA_Fn-UseC_-Telco-Customer-Churn.csv"
+OUTPUTS = ROOT / "modelos" / "resultados"
 
 INK = RGBColor(22, 28, 39)
 MUTED = RGBColor(94, 104, 119)
