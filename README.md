@@ -60,13 +60,20 @@ modelos/resultados/test_predictions.csv
 modelos/resultados/test_predictions_from_saved_model.csv
 ```
 
-`presentacion/` contiene la presentacion final y los graficos usados para armarla.
+`presentacion/` contiene la presentacion final y los graficos usados para armarla:
+
+```text
+presentacion/final/Presentacion_Final_Churn_Redesign.pptx
+presentacion/final/Presentacion_Final_Churn_Redesign.pdf
+```
 
 ## Modelo final
 
 Modelo seleccionado: `CatBoost`.
 
 Metrica principal de seleccion de modelos: `PR-AUC`, adecuada para clases desbalanceadas.
+
+Validacion de modelos: validacion cruzada estratificada de `5 folds` sobre train.
 
 Metrica para seleccion de umbral: `F2-score`, priorizando recall sin ignorar precision.
 

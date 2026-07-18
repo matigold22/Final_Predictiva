@@ -362,7 +362,7 @@ def build_deck(df, metrics, cv, preds, checks):
     s = new("4 - Evaluacion", "Validacion: todo se decide dentro de train", 6)
     card(s, "TRAIN", "5.634", "80%, estratificado", 0.75, 1.35, 1.7, 0.95, BLUE)
     card(s, "TEST", "1.409", "20%, cerrado", 2.75, 1.35, 1.7, 0.95, TEAL)
-    card(s, "CV", "3 folds", "solo train", 4.75, 1.35, 1.7, 0.95, GREEN)
+    card(s, "CV", "5 folds", "solo train", 4.75, 1.35, 1.7, 0.95, GREEN)
     card(s, "SEED", "42", "reproducible", 6.75, 1.35, 1.7, 0.95, VIOLET)
     bullets(s, [
         "Split estratificado: la proporcion de churn queda estable en train y test.",
