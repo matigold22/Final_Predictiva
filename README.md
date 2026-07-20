@@ -33,7 +33,6 @@ presentacion/
   final/
 
 README.md
-notas.md
 ```
 
 ## Que hay en cada carpeta
@@ -131,11 +130,3 @@ Opcion completa de analisis:
    - Carga el modelo guardado.
    - Reconstruye las features.
    - Replica las predicciones del test interno.
-
-## Notas
-
-Las limitaciones, mejoras posibles y conclusiones para defender el trabajo estan en:
-
-```text
-notas.md
-```
