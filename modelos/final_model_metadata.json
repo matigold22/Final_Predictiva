@@ -1,0 +1,13 @@
+{
+  "selected_model": "catboost",
+  "decision_threshold": 0.31,
+  "random_state": 42,
+  "test_size": 0.2,
+  "threshold_validation_size": 0.2,
+  "hyperparameters": {
+    "iterations": 100,
+    "learning_rate": 0.05,
+    "depth": 4,
+    "l2_leaf_reg": 3
+  }
+}

@@ -20,8 +20,13 @@ notebooks/
   01_train_final_model.ipynb
   02_apply_final_model.ipynb
 
+scripts/
+  train_final_model.py
+  apply_final_model.py
+
 modelos/
   final_model.joblib
+  final_model_metadata.json
   resultados/
 
 presentacion/
@@ -48,10 +53,21 @@ notebooks/01_train_final_model.ipynb
 notebooks/02_apply_final_model.ipynb
 ```
 
+`scripts/` agrega versiones minimas y reproducibles que cumplen de forma
+estricta con la consigna, sin quitar las notebooks completas de analisis:
+
+```text
+scripts/train_final_model.py
+scripts/apply_final_model.py
+```
+
+Las versiones exactas de las dependencias estan fijadas en `requirements.txt`.
+
 `modelos/` contiene el modelo final guardado y los resultados exportados:
 
 ```text
 modelos/final_model.joblib
+modelos/final_model_metadata.json
 modelos/resultados/model_metrics.json
 modelos/resultados/model_selection_cv_results.csv
 modelos/resultados/hyperparameter_search_results.csv
@@ -89,6 +105,21 @@ F2:        0.740
 ```
 
 ## Como reproducir
+
+Opcion minima recomendada para la entrega:
+
+```text
+pip install -r requirements.txt
+python scripts/train_final_model.py
+python scripts/apply_final_model.py
+```
+
+El primer script entrena exclusivamente el CatBoost final con los
+hiperparametros seleccionados, determina el umbral F2 dentro de train y guarda
+el modelo y su metadata. El segundo carga esos artefactos y genera el archivo de
+predicciones del test reproducible.
+
+Opcion completa de analisis:
 
 1. Ejecutar `notebooks/01_train_final_model.ipynb`.
    - Entrena modelos candidatos.
